@@ -197,8 +197,8 @@ If it saved you some time and you feel like buying the author a coffee, here is 
 5536 9140 3935 1840
 ```
 
-A virtual card set aside for donations only. Card-to-card transfer; CVV and expiry are
-never published. The author is self-employed and declares this income.
+A virtual card set aside for donations only. Card-to-card transfer. The author is
+self-employed and declares this income.
 
 **USDT — TRC-20 (TRON)**
 
