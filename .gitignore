@@ -1,0 +1,25 @@
+# Signing key and secrets — never commit these
+android/keystore.jks
+android/local.properties
+*.jks
+*.keystore
+
+# Build output
+dist/*.apk
+dist/*.idsig
+_site/
+build/
+*.class
+
+# macOS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# Local landing site — hosted separately, not published from this repo
+/site/
+/scripts/
+/docs/website.md
+/docs/site-preview-*.jpg

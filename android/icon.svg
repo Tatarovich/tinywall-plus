@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_Слой_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 500 500">
+  <!-- Generator: Adobe Illustrator 30.1.0, SVG Export Plug-In . SVG Version: 2.1.1 Build 136)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: url(#_Безымянный_градиент);
+      }
+
+      .st1 {
+        fill: #fff;
+      }
+
+      .st2 {
+        fill: #48c7ff;
+      }
+    </style>
+    <linearGradient id="_Безымянный_градиент" data-name="Безымянный градиент" x1="64.2" y1="64.2" x2="417.8" y2="417.8" gradientTransform="translate(0 500) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0e1017"/>
+      <stop offset="1" stop-color="#1a2332"/>
+    </linearGradient>
+    <clipPath id="app-round">
+      <rect width="500" height="500" rx="115"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#app-round)">
+  <rect class="st0" width="500" height="500"/>
+  <g>
+    <polygon class="st2" points="318 246.2 307.1 290.3 281.5 201.7 260.9 201.7 235.3 290.3 213.6 201.7 185 201.7 222.5 342.1 245.4 342.1 271.2 256.9 297 342.1 319.9 342.1 345.7 246.2 318 246.2"/>
+    <polygon class="st1" points="432.9 200.4 389.9 200.4 389.9 157.9 363.8 157.9 363.8 200.4 320.8 200.4 320.8 224.8 363.8 224.8 363.8 267.4 389.9 267.4 389.9 224.8 432.9 224.8 432.9 200.4"/>
+    <polygon class="st2" points="158.6 201.7 77.1 201.7 77.1 226.1 113.8 226.1 113.8 342.1 141 342.1 141 226.1 165.6 226.1 158.6 201.7"/>
+  </g>
+  </g>
+</svg>

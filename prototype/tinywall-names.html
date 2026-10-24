@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TinyWall — name options</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#05070b}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;color:#f4f7fb;-webkit-font-smoothing:antialiased}
+.stage{position:relative;width:1920px;height:1080px;overflow:hidden;transform-origin:top left}
+.bg{position:absolute;inset:-3%;width:106%;height:106%;object-fit:cover;filter:blur(4px) saturate(1.02)}
+.scrim{position:absolute;inset:0;background:
+ radial-gradient(115% 90% at 50% 42%,transparent 30%,rgba(3,5,8,.44) 100%),
+ linear-gradient(180deg,rgba(3,5,8,.64),rgba(3,5,8,.18) 35%,rgba(3,5,8,.70));
+ }
+header{position:absolute;left:96px;top:64px;right:96px;display:flex;align-items:flex-start;justify-content:space-between}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#7aa2ff;font-weight:650}
+h1{font-size:54px;letter-spacing:-1.6px;font-weight:600;margin-top:8px}
+.sub{font-size:17px;color:#9aa4b5;margin-top:10px;line-height:1.4}
+.tip{max-width:480px;text-align:right;font-size:13px;line-height:1.5;color:#8b95a8;padding-top:10px}
+.tip b{color:#dce7ff;font-weight:500}
+.grid{position:absolute;left:96px;right:96px;top:240px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{position:relative;height:302px;padding:26px 28px;border:1px solid rgba(255,255,255,.12);border-radius:20px;background:rgba(10,14,20,.72);backdrop-filter:blur(18px);display:flex;flex-direction:column;overflow:hidden}
+.card:after{content:"";position:absolute;left:28px;right:28px;bottom:58px;height:1px;background:rgba(255,255,255,.08)}
+.name{font-size:54px;line-height:1.08;font-weight:600;letter-spacing:-1.6px;white-space:nowrap}
+.name .mark{color:#7aa2ff}
+.desc{font-size:14px;line-height:1.45;color:#9aa4b5;margin-top:14px;max-width:360px}
+.tag{position:absolute;right:24px;top:24px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#7aa2ff;border:1px solid rgba(122,162,255,.35);background:rgba(122,162,255,.10);border-radius:999px;padding:6px 9px;font-weight:600}
+.bottom{position:absolute;left:28px;bottom:20px;font-size:12px;color:#7b879b;display:flex;align-items:center;gap:8px}
+.dot{width:6px;height:6px;border-radius:50%;background:#7aa2ff}
+.foot{position:absolute;left:96px;right:96px;bottom:36px;display:flex;justify-content:space-between;font-size:12px;color:#6f7b8d;letter-spacing:.02em}
+.card.recommended{border-color:rgba(122,162,255,.55);box-shadow:0 0 0 1px rgba(122,162,255,.22),0 24px 60px -30px #000}
+.card.recommended .bottom{color:#a9bdd9}
+</style>
+</head>
+<body>
+<div class="stage">
+  <img class="bg" src="assets/tinywall/full/mountains.jpg" alt="">
+  <div class="scrim"></div>
+  <header>
+    <div><div class="eyebrow">TinyWall · name studies</div><h1>Keep the name. Add a mark.</h1><div class="sub">The exact word <b>TinyWall</b> stays at the start — so search still finds it.</div></div>
+    <div class="tip"><b>Search rule:</b> unusual letters inside the word (TinyWalll, TinyyWall) break exact matching. A symbol after the word keeps the prefix intact.</div>
+  </header>
+  <div class="grid">
+    <div class="card recommended">
+      <div class="tag">Recommended</div>
+      <div class="name">TinyWall<span class="mark">°</span></div>
+      <div class="desc">A quiet degree mark. Minimal, memorable, and it reads as a design signature rather than a typo.</div>
+      <div class="bottom"><span class="dot"></span> exact prefix · clean logo</div>
+    </div>
+    <div class="card">
+      <div class="name">TinyWall<span class="mark">·</span></div>
+      <div class="desc">The softest option: a middle dot, almost a pause. Very quiet, but easy to miss at small sizes.</div>
+      <div class="bottom"><span class="dot"></span> minimal · subtle</div>
+    </div>
+    <div class="card">
+      <div class="name">TinyWall<span class="mark">⌂</span></div>
+      <div class="desc">A tiny house: home screen + wall. The most on-theme mark, but depends on font support.</div>
+      <div class="bottom"><span class="dot"></span> home mark · thematic</div>
+    </div>
+    <div class="card">
+      <div class="name">TinyWall<span class="mark">✦</span></div>
+      <div class="desc">A four-point star. More decorative and a little louder; works well as an icon accent.</div>
+      <div class="bottom"><span class="dot"></span> star · decorative</div>
+    </div>
+    <div class="card">
+      <div class="name">TinyWall<span class="mark">+</span></div>
+      <div class="desc">The familiar plus. Highly searchable and readable, but less unique — many apps use “+”.</div>
+      <div class="bottom"><span class="dot"></span> familiar · less unique</div>
+    </div>
+    <div class="card">
+      <div class="name">TinyWall <span class="mark">TV</span></div>
+      <div class="desc">A descriptor instead of a symbol: best discovery for “TV launcher”, less of a design signature.</div>
+      <div class="bottom"><span class="dot"></span> searchable · descriptive</div>
+    </div>
+  </div>
+  <div class="foot"><span>TinyWall · naming prototype</span><span>One recommendation, five alternatives</span></div>
+</div>
+<script>
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);const st=document.querySelector('.stage');st.style.transform='scale('+s+')';st.style.left=((innerWidth-1920*s)/2)+'px';st.style.top=((innerHeight-1080*s)/2)+'px';st.style.position='absolute';}
+addEventListener('resize',fit);fit();
+</script>
+</body>
+</html>

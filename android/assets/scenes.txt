@@ -1,0 +1,11 @@
+mountains|Mountains|Горы
+fjord|Fjord|Фьорд
+city|Night City|Ночной город
+plants|Plants|Растения
+christ|Christmas|Рождество
+newyear|New Year|Новый год
+pinq|Penguins|Пингвины
+bears|Bears|Медведи
+toon|Toon|Мультфильм
+games|Games|Игры
+shooter|Battle|Битва

@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TinyWall+ 0.10 — interactive prototype</title>
+<style>
+:root{
+  --bg:#070a0f;
+  --panel:#0d1117;
+  --panel-2:#11161e;
+  --text:#f4f7fb;
+  --muted:#8b95a8;
+  --muted2:#5e687a;
+  --card:rgba(10,14,20,.78);
+  --card-2:rgba(10,14,20,.52);
+  --card-empty:rgba(8,11,16,.46);
+  --border:rgba(255,255,255,.10);
+  --border-2:rgba(255,255,255,.17);
+  --accent:#7aa2ff;
+  --accent-soft:rgba(122,162,255,.16);
+  --focus:#ffffff;
+  --green:#4ade80;
+  --danger:#ff6b81;
+  --shadow:0 34px 90px rgba(0,0,0,.55);
+  --scrim-rgb:4,7,11;
+  --dim:.30;
+}
+body[data-theme="light"]{
+  --bg:#eef2f8;
+  --panel:#f7f9fc;
+  --panel-2:#eef2f8;
+  --text:#10141c;
+  --muted:#5c6678;
+  --muted2:#8b94a6;
+  --card:rgba(255,255,255,.88);
+  --card-2:rgba(255,255,255,.62);
+  --card-empty:rgba(255,255,255,.56);
+  --border:rgba(16,20,28,.12);
+  --border-2:rgba(16,20,28,.22);
+  --accent:#3568ff;
+  --accent-soft:rgba(53,104,255,.13);
+  --focus:#1e4fd6;
+  --shadow:0 34px 80px rgba(22,36,60,.18);
+  --scrim-rgb:235,240,248;
+  --dim:.62;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden}
+body{background:#020406;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+svg{display:block}
+button{outline:none}
+:focus{outline:none}
+
+.stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:top left;background:var(--bg);transition:background .3s ease}
+.bg-image{position:absolute;left:-4%;top:-4%;width:108%;height:108%;object-fit:cover;z-index:0;animation:kenburns 54s ease-in-out infinite alternate;will-change:transform,filter;transition:filter .3s ease}
+@keyframes kenburns{0%{transform:scale(1.02) translate3d(-.5%,-.4%,0)}100%{transform:scale(1.09) translate3d(.6%,.5%,0)}}
+body[data-blur="soft"] .bg-image{filter:blur(4px) saturate(1.02)}
+body[data-blur="strong"] .bg-image{filter:blur(11px) saturate(1.03)}
+body[data-blur="off"] .bg-image{filter:none}
+body.no-bg .bg-image{opacity:0}
+body.no-motion .bg-image{animation-play-state:paused}
+body.overlay-open .bg-image{animation-play-state:paused}
+
+.scrim{position:absolute;inset:0;z-index:1;pointer-events:none;background:
+  radial-gradient(120% 95% at 50% 42%,transparent 38%,rgba(var(--scrim-rgb),.38) 100%),
+  linear-gradient(180deg,rgba(var(--scrim-rgb),.60) 0%,rgba(var(--scrim-rgb),.10) 29%,rgba(var(--scrim-rgb),.05) 63%,rgba(var(--scrim-rgb),.58) 100%),
+  rgba(var(--scrim-rgb),var(--dim));transition:background .35s ease}
+body.dim-soft{--dim:.18}
+body.dim-mid{--dim:.30}
+body.dim-deep{--dim:.48}
+body[data-theme="light"]{--dim:.64}
+body[data-theme="light"].dim-soft{--dim:.52}
+body[data-theme="light"].dim-mid{--dim:.64}
+body[data-theme="light"].dim-deep{--dim:.78}
+.grain{position:absolute;inset:0;z-index:2;opacity:.035;pointer-events:none;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E")}
+.time,.date{text-shadow:0 2px 30px rgba(0,0,0,.45)}
+body[data-theme="light"] .time,body[data-theme="light"] .date{text-shadow:none}
+
+header{position:relative;z-index:5;padding:56px 96px 0;display:flex;align-items:flex-start;justify-content:space-between}
+.header-left{display:flex;align-items:flex-start;gap:38px}
+.clock{transition:opacity .2s ease,transform .2s ease}
+.time{font-size:96px;line-height:.88;font-weight:600;letter-spacing:-4px}
+.date{margin-top:13px;font-size:23px;font-weight:450;color:var(--muted);letter-spacing:.1px}
+body.hide-clock .clock{display:none}
+.weather{height:98px;display:flex;align-items:center;gap:13px;padding-left:27px;border-left:1px solid var(--border-2);margin-top:3px}
+.weather-icon{width:46px;height:46px;color:var(--accent);flex:none}
+.weather-icon svg{width:46px;height:46px}
+.weather-temp{font-size:48px;line-height:1;font-weight:600;letter-spacing:-2px;white-space:nowrap}
+.weather-meta .city{font-size:17px;font-weight:600;white-space:nowrap}
+.weather-meta .cond{font-size:14px;color:var(--muted);margin-top:4px;white-space:nowrap}
+.status{display:flex;align-items:center;gap:10px;padding:12px 18px 12px 15px;border:1px solid var(--border);border-radius:999px;background:var(--card);backdrop-filter:blur(16px);font-size:17px;color:var(--muted)}
+.status svg{width:19px;height:19px;color:var(--muted)}
+.status .sep{width:1px;height:16px;background:var(--border);margin:0 3px}
+.status b{font-weight:500;color:var(--text)}
+
+main{position:relative;z-index:5;height:calc(100% - 340px);display:flex;align-items:center;justify-content:center;padding:0 96px}
+.slots{display:flex;gap:26px;justify-content:center;align-items:center}
+.slot{position:relative;width:280px;height:205px;padding:24px 26px;border-radius:26px;display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:1px solid var(--border);background:var(--card);backdrop-filter:blur(18px);box-shadow:0 1px 0 rgba(255,255,255,.05) inset;transition:transform .18s cubic-bezier(.2,.8,.2,1),border-color .18s ease,box-shadow .18s ease,background .3s ease}
+.slot:hover{transform:translateY(-3px)}
+.slot:focus{transform:translateY(-9px) scale(1.045);border-color:var(--focus);box-shadow:0 0 0 1px var(--focus),0 26px 64px -18px rgba(0,0,0,.65);z-index:2}
+.slot.empty{border-style:dashed;border-color:color-mix(in srgb,var(--text) 27%,transparent);background:rgba(8,11,16,.62)}
+body[data-theme="light"] .slot.empty{background:rgba(255,255,255,.70)}
+.slot.empty:focus{border-style:solid;border-color:var(--focus);background:color-mix(in srgb,var(--accent) 8%,var(--card-empty))}
+.slot-no{font-size:12px;line-height:1;letter-spacing:.14em;color:var(--muted2);font-weight:500}
+.slot-plus{position:absolute;inset:0;display:grid;place-items:center;font-size:40px;font-weight:300;color:var(--muted);transition:color .18s ease,transform .18s ease}
+.slot.empty:focus .slot-plus{color:var(--focus);transform:scale(1.08)}
+.slot-add{position:absolute;left:26px;bottom:23px;font-size:16px;color:var(--muted);font-weight:500}
+.slot.empty:focus .slot-add{color:var(--text)}
+.slot-accent{position:absolute;left:26px;top:24px;width:44px;height:4px;border-radius:999px;background:var(--accent)}
+.slot-name{margin-top:auto;margin-bottom:auto;padding-top:18px;font-size:33px;line-height:1.08;font-weight:600;letter-spacing:-.6px;color:var(--text);max-width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.slot.filled .slot-no{position:absolute;right:25px;top:23px;color:var(--muted)}
+.slot-arrow{position:absolute;right:23px;bottom:22px;width:21px;height:21px;color:var(--accent);opacity:0;transform:translateX(-5px);transition:.18s ease}
+.slot:focus .slot-arrow{opacity:1;transform:none}
+body.size-s .slot{width:250px;height:180px;padding:21px 22px}
+body.size-s .slot-name{font-size:29px}
+body.size-s .slot-accent{left:22px;top:21px;width:38px}
+body.size-s .slot-no{top:20px;right:21px}
+body.size-s .slot-add{left:22px;bottom:19px}
+body.size-l .slot{width:286px;height:220px}
+body.size-l .slot-name{font-size:35px}
+body.size-l .slot-accent{width:48px}
+
+footer{position:absolute;left:0;right:0;bottom:0;z-index:5;padding:0 96px 42px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px}
+.dock{display:flex;gap:5px;padding:7px;border:1px solid var(--border);border-radius:999px;background:rgba(13,17,23,.76);backdrop-filter:blur(20px);box-shadow:0 20px 50px -25px rgba(0,0,0,.7);justify-self:center}
+body[data-theme="light"] .dock{background:rgba(255,255,255,.80)}
+.dock-item{display:flex;align-items:center;gap:9px;padding:14px 20px;border-radius:999px;color:var(--muted);font-size:19px;font-weight:500;transition:.15s ease;white-space:nowrap}
+.dock-item svg{width:21px;height:21px}
+.dock-item:focus{background:var(--accent-soft);color:var(--text);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 65%,transparent) inset}
+.home-btn{justify-self:end;padding:14px 23px;border-radius:12px;background:var(--accent);color:#fff;font-size:17px;font-weight:600;box-shadow:0 10px 28px -14px var(--accent);transition:.15s ease}
+.home-btn:focus{box-shadow:0 0 0 2px var(--focus),0 10px 28px -12px var(--accent)}
+
+.overlay{position:absolute;inset:0;z-index:20;display:none;background:rgba(4,6,10,.55);backdrop-filter:blur(9px)}
+.overlay.open{display:flex}
+body[data-theme="light"] .overlay{background:rgba(230,235,245,.58)}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.center-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:38px}
+.center-panel{width:1240px;max-height:960px;background:var(--panel);border:1px solid var(--border);border-radius:28px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding:34px 38px 24px;border-bottom:1px solid var(--border)}
+.panel-head h2{font-size:33px;font-weight:600;letter-spacing:-.7px}
+.panel-head p{font-size:15px;color:var(--muted);margin-top:7px;line-height:1.35}
+.panel-scroll{overflow-y:auto;padding:24px 38px;flex:1;scrollbar-width:none}
+.panel-scroll::-webkit-scrollbar{display:none}
+.panel-foot{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 38px;border-top:1px solid var(--border);font-size:14px;color:var(--muted2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 17px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:15px;font-weight:500;transition:.15s ease;white-space:nowrap}
+.btn:hover{color:var(--text)}
+.btn:focus{color:var(--text);border-color:var(--focus);box-shadow:0 0 0 1px var(--focus)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:focus{box-shadow:0 0 0 2px var(--focus)}
+.btn.ghost{background:transparent}
+.badge{display:inline-flex;align-items:center;padding:7px 11px;border:1px solid color-mix(in srgb,var(--accent) 42%,transparent);border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+
+/* settings side sheet: deliberately square, flush to the right edge */
+.side-sheet{position:absolute;top:0;right:0;width:760px;height:100%;background:linear-gradient(180deg,var(--panel-2),var(--panel) 180px);border-left:1px solid var(--border-2);box-shadow:-40px 0 90px rgba(0,0,0,.38);display:flex;flex-direction:column;border-radius:0;overflow:hidden}
+.sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:32px 46px 6px}
+.sheet-title{display:flex;flex-direction:column;gap:4px}
+.sheet-brand{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:650}
+.sheet-head h2{font-size:35px;font-weight:600;letter-spacing:-.8px;line-height:1.05}
+.sheet-scroll{flex:1;overflow-y:auto;padding:10px 46px 24px;scrollbar-width:none}
+.sheet-scroll::-webkit-scrollbar{display:none}
+.sheet-footer{padding:16px 46px 22px;border-top:1px solid var(--border);font-size:12px;color:var(--muted2);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.settings-group{margin:16px 0 0}
+.group-label{font-size:10px;line-height:1;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);font-weight:650;margin:0 22px 8px}
+.group-card{border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.035);overflow:hidden}
+body[data-theme="light"] .group-card{background:rgba(16,20,28,.035)}
+.group-card .setting{padding:15px 22px;border-bottom:0}
+.group-card .setting + .setting{border-top:1px solid var(--border)}
+.group-card .setting.row-link:focus{background:var(--accent-soft);box-shadow:none;padding-left:22px;padding-right:22px;margin:0}
+.group-card .setting:focus{background:var(--accent-soft)}
+.setting{width:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:11px 0;border-bottom:1px solid var(--border);text-align:left}
+.setting:last-child{border-bottom:0}
+.setting-main{display:flex;flex-direction:column;min-width:0}
+.label{font-size:20px;font-weight:600;letter-spacing:-.2px}
+.sub{font-size:13px;line-height:1.35;color:var(--muted);margin-top:5px;max-width:430px}
+.setting.row-link{border-radius:0;padding-left:0;padding-right:0}
+.setting.row-link:focus{background:linear-gradient(90deg,var(--accent-soft),transparent 70%);box-shadow:inset 0 0 0 1px var(--border-2);padding-left:10px;padding-right:10px;margin-left:-10px;margin-right:-10px}
+.group-card .setting.row-link{padding-left:22px;padding-right:22px}
+.row-value{display:flex;align-items:center;gap:10px;color:var(--accent);font-size:15px;font-weight:500;white-space:nowrap}
+.row-value svg{width:17px;height:17px}
+.seg{display:flex;gap:3px;padding:4px;border:1px solid var(--border);border-radius:11px;background:var(--card);flex:none}
+.seg button{padding:9px 13px;border-radius:7px;color:var(--muted);font-size:14px;font-weight:500;transition:.15s ease;white-space:nowrap}
+.seg button:focus{color:var(--text);box-shadow:0 0 0 1.5px var(--accent) inset}
+.seg button.on{background:var(--accent-soft);color:var(--text);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 42%,transparent) inset}
+.switch{width:58px;height:32px;padding:3px;border-radius:999px;background:var(--accent);transition:background .18s ease;flex:none}
+.switch:focus{box-shadow:0 0 0 2px var(--focus)}
+.switch i{display:block;width:26px;height:26px;border-radius:50%;background:#fff;transform:translateX(26px);transition:transform .18s ease}
+body.font-normal .label{font-size:19px}
+body.font-normal .sub{font-size:12.5px}
+body.font-xlarge .label{font-size:21px}
+body.font-xlarge .sub{font-size:13.5px}
+.switch.off{background:var(--border-2)}
+.switch.off i{transform:translateX(0)}
+.wide-button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:20px;margin:12px 0 0;padding:15px 18px;border:1px solid var(--border);border-radius:12px;background:var(--card);text-align:left;transition:.15s ease}
+.wide-button .label{display:block;font-size:17px}
+.wide-button .sub{display:block;font-size:12px;margin-top:3px}
+.wide-button svg{width:19px;height:19px;color:var(--accent);flex:none}
+.wide-button:focus{border-color:var(--focus);box-shadow:0 0 0 1px var(--focus)}
+.primary-wide{width:100%;margin:20px 0 6px;padding:15px;border-radius:12px;background:var(--accent);color:#fff;font-size:17px;font-weight:600;text-align:center;transition:.15s ease}
+.primary-wide:focus{box-shadow:0 0 0 2px var(--focus)}
+.sheet-note{font-size:11px;color:var(--muted2);line-height:1.45;padding:14px 0 6px}
+
+/* background gallery */
+.gallery-panel{width:1280px}
+.gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.wall{display:flex;flex-direction:column;gap:0;text-align:left;border:1px solid var(--border);border-radius:16px;background:var(--card);padding:5px;transition:.15s ease}
+.wall-thumb{position:relative;width:100%;aspect-ratio:16/9;border-radius:11px;overflow:hidden;background:#080b10}
+.wall-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease}
+.wall:hover .wall-thumb img{transform:scale(1.03)}
+.wall-label{font-size:12px;color:var(--muted);padding:7px 7px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wall:focus{border-color:var(--focus);box-shadow:0 0 0 1px var(--focus),0 16px 38px -22px #000}
+.wall.on{border-color:color-mix(in srgb,var(--accent) 78%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 60%,transparent)}
+.wall.on .wall-label{color:var(--text)}
+.wall-check{position:absolute;right:8px;top:8px;width:26px;height:26px;border-radius:50%;display:none;place-items:center;background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.wall.on .wall-check{display:grid}
+.wall-check svg{width:15px;height:15px}
+.custom-thumb{display:grid;place-items:center;background:rgba(255,255,255,.045);border:1px dashed var(--border);border-radius:11px}
+.custom-plus{font-size:38px;line-height:1;color:var(--muted);font-weight:300}
+
+/* tile positions */
+.position-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.position-card{position:relative;min-height:156px;padding:18px 20px;border:1px solid var(--border);border-radius:18px;background:var(--card);display:flex;flex-direction:column;align-items:flex-start;text-align:left;transition:.15s ease}
+.position-card:hover{transform:translateY(-2px)}
+.position-card:focus{border-color:var(--focus);box-shadow:0 0 0 1px var(--focus),0 18px 40px -24px #000;z-index:2}
+.position-card.filled{background:linear-gradient(155deg,var(--card),var(--card-2))}
+.position-accent{position:absolute;left:20px;top:17px;width:38px;height:3px;border-radius:999px;background:var(--accent)}
+.position-top{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.position-no{font-size:11px;letter-spacing:.14em;color:var(--muted2)}
+.position-clear{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:var(--muted2);background:transparent}
+.position-clear:hover{background:var(--border);color:var(--text)}
+.position-clear:focus{box-shadow:0 0 0 1.5px var(--focus);color:var(--text)}
+.position-clear svg{width:14px;height:14px}
+.position-name{font-size:25px;font-weight:600;letter-spacing:-.3px;line-height:1.12;max-width:100%;word-break:break-word}
+.position-hint{font-size:12px;color:var(--muted);margin-top:auto;padding-top:12px}
+.position-card.filled .position-name{color:var(--text)}
+.position-card:not(.filled) .position-name{color:var(--muted)}
+
+/* app picker */
+.apps-panel{width:1240px}
+.apps-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.app-tile{min-height:132px;padding:13px 8px;border:1px solid transparent;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:.15s ease;text-align:center}
+.app-glyph{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;font-size:18px;font-weight:650;color:var(--glyph);background:color-mix(in srgb,var(--glyph) 16%,transparent);border:1px solid color-mix(in srgb,var(--glyph) 30%,transparent)}
+.app-name{font-size:14px;line-height:1.2;color:var(--muted);font-weight:500;max-width:100%;word-break:break-word}
+.app-tile:hover{background:var(--card)}
+.app-tile:focus{background:var(--card);border-color:var(--focus);box-shadow:0 0 0 1px var(--focus);}
+.app-tile:focus .app-name,.app-tile.focused .app-name{color:var(--text)}
+.app-tile.focused{background:var(--card);border-color:var(--focus);box-shadow:0 0 0 1px var(--focus)}
+.app-tile.current{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 50%,transparent)}
+.app-tile.current .app-name{color:var(--text)}
+.app-check{position:absolute;right:8px;top:8px;width:20px;height:20px;border-radius:50%;display:none;place-items:center;background:var(--accent);color:#fff}
+.app-tile{position:relative}
+.app-tile.current .app-check{display:grid}
+.app-check svg{width:12px;height:12px}
+.apps-foot .clear-link{color:var(--danger);font-weight:500}
+.apps-foot .clear-link:focus{box-shadow:0 0 0 1.5px var(--focus)}
+.apps-headline{display:flex;align-items:center;gap:15px;flex-wrap:wrap}
+.apps-headline h2{font-size:33px;font-weight:600;letter-spacing:-.7px}
+
+/* city search */
+.city-panel{width:780px}
+.city-search{display:flex;align-items:center;gap:10px;margin:20px 38px 0;padding:0 14px;height:56px;border:1px solid var(--border-2);border-radius:13px;background:var(--card);flex:none}
+.city-search:focus-within{border-color:var(--focus);box-shadow:0 0 0 1px var(--focus)}
+.city-search > svg{width:20px;height:20px;color:var(--muted);flex:none}
+.city-search input{flex:1;min-width:0;height:100%;border:0;background:transparent;color:var(--text);font:inherit;font-size:18px;outline:none}
+.city-search input::placeholder{color:var(--muted2)}
+.city-clear{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:var(--muted);flex:none}
+.city-clear:hover{background:var(--border);color:var(--text)}
+.city-clear:focus{box-shadow:0 0 0 1.5px var(--focus);color:var(--text)}
+.city-clear svg{width:14px;height:14px}
+.city-current{margin:10px 42px 0;font-size:12px;color:var(--muted2)}
+.city-current b{color:var(--muted);font-weight:500}
+.city-empty{padding:34px 4px;text-align:center;color:var(--muted2);font-size:14px;line-height:1.5}
+#cityResults{display:flex;flex-direction:column;gap:8px;width:100%}
+.city-results{display:flex;flex-direction:column;gap:8px}
+.city-result{display:flex;align-items:center;gap:13px;text-align:left;padding:13px 14px;border:1px solid var(--border);border-radius:13px;background:var(--card);transition:.15s ease;min-width:0;width:100%}
+.city-result:hover{background:var(--panel-2)}
+.city-result:focus{border-color:var(--focus);box-shadow:0 0 0 1px var(--focus)}
+.city-result.on{border-color:color-mix(in srgb,var(--accent) 65%,transparent);background:var(--accent-soft)}
+.city-icon{width:34px;height:34px;color:var(--accent);flex:none;display:grid;place-items:center}
+.city-icon svg{width:30px;height:30px}
+.city-meta{min-width:0;flex:1}
+.city-name{display:block;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.city-region{display:block;font-size:11px;color:var(--muted2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.city-temp{font-size:19px;font-weight:600;white-space:nowrap}
+.city-check{width:19px;height:19px;color:var(--accent);display:none;flex:none}
+.city-result.on .city-check{display:block}
+.city-result.demo{border-style:dashed}
+.city-note{font-size:11px;color:var(--muted2);margin-top:12px;line-height:1.45}
+
+/* toast */
+.toast{position:absolute;left:50%;bottom:34px;transform:translate(-50%,20px);z-index:80;padding:12px 20px;border:1px solid var(--border);border-radius:999px;background:rgba(13,17,23,.92);backdrop-filter:blur(18px);font-size:15px;color:var(--text);opacity:0;pointer-events:none;transition:.22s ease;box-shadow:0 18px 50px rgba(0,0,0,.35);white-space:nowrap}
+body[data-theme="light"] .toast{background:rgba(255,255,255,.94)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body data-theme="dark" data-blur="soft" class="dim-mid">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2.8 8.7a14.2 14.2 0 0 1 18.4 0M6 12.2a9.4 9.4 0 0 1 12 0M9.1 15.7a4.6 4.6 0 0 1 5.8 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path d="M19.14 12.94a7.07 7.07 0 0 0 .06-.94 7.07 7.07 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.63.94l-2.39-.96a.5.5 0 0 0-.61.22L2.74 8.87a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.62-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.44.34.61.22l2.39-.96c.5.38 1.04.7 1.63.94l.36 2.54c.04.24.25.42.5.42h3.84c.25 0 .46-.18.5-.42l.36-2.54c.59-.24 1.13-.56 1.63-.94l2.39.96c.17.12.47.02.61-.22l1.92-3.32a.5.5 0 0 0-.12-.64zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z" fill="currentColor"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-tiles" viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M13.5 8.5l2 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M9 5.5l6.5 6.5L9 18.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M9 5.5l6.5 6.5L9 18.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.3 4.3L19 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M18.7 5.3l-1.5 1.5M6.8 17.2l-1.5 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7.2 18.2h10.1a4.1 4.1 0 0 0 .4-8.2A5.7 5.7 0 0 0 6.5 10a4.1 4.1 0 0 0 .7 8.2z" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></symbol>
+    <symbol id="i-snow" viewBox="0 0 24 24"><path d="M7.2 15.2h10.1a4.1 4.1 0 0 0 .4-8.2A5.7 5.7 0 0 0 6.5 7a4.1 4.1 0 0 0 .7 8.2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 19h.01M12 20h.01M16 19h.01" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-rain" viewBox="0 0 24 24"><path d="M7.2 14.2h10.1a4.1 4.1 0 0 0 .4-8.2A5.7 5.7 0 0 0 6.5 6a4.1 4.1 0 0 0 .7 8.2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8.5 17.5l-1 2.4M12.5 17.5l-1 2.4M16.5 17.5l-1 2.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-wind" viewBox="0 0 24 24"><path d="M3 8h10.5a2.5 2.5 0 1 0-2.4-3.2M3 12h15a2.5 2.5 0 1 1-2.4 3.2M3 16h8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M15.5 15.5l4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="stage" id="stage">
+  <img class="bg-image" id="bgImage" src="assets/tinywall/full/mountains.jpg" alt="">
+  <div class="scrim"></div>
+  <div class="grain"></div>
+
+  <header>
+    <div class="header-left">
+      <div class="clock" id="clock">
+        <div class="time" id="time">21:07</div>
+        <div class="date" id="date">Friday, 23 October</div>
+      </div>
+      <div class="weather" id="weather">
+        <div class="weather-icon" id="weatherIcon"></div>
+        <div class="weather-temp" id="weatherTemp">1°</div>
+        <div class="weather-meta">
+          <div class="city" id="weatherCity">Moscow</div>
+          <div class="cond" id="weatherCond">Cloudy</div>
+        </div>
+      </div>
+    </div>
+    <div class="status">
+      <svg><use href="#i-wifi"/></svg>
+      <span>Wi-Fi <b>5 GHz</b></span>
+      <span class="sep"></span>
+      <span><b>TinyWall+ 0.10</b></span>
+      <span class="sep"></span>
+      <span><b>1920×1080</b></span>
+    </div>
+  </header>
+
+  <main>
+    <div class="slots" id="slots"></div>
+  </main>
+
+  <footer>
+    <div></div>
+    <div class="dock">
+      <button class="dock-item focusable" data-action="settings"><svg><use href="#i-gear"/></svg><span data-i18n="settings">Settings</span></button>
+      <button class="dock-item focusable" data-action="all"><svg><use href="#i-grid"/></svg><span data-i18n="allApps">All apps</span></button>
+      <button class="dock-item focusable" data-action="tiles"><svg><use href="#i-tiles"/></svg><span data-i18n="tiles">Tiles</span></button>
+    </div>
+    <button class="home-btn focusable" id="makeDefault" data-i18n="makeDefault">Make default</button>
+  </footer>
+
+  <!-- settings: square side sheet -->
+  <div class="overlay" id="settingsOverlay">
+    <div class="side-sheet">
+      <div class="sheet-head">
+        <div class="sheet-title"><div class="sheet-brand">TinyWall+</div><h2 data-i18n="settings">Settings</h2></div>
+        <button class="btn focusable" data-close><span data-i18n="close">Close</span></button>
+      </div>
+      <div class="sheet-scroll">
+        <div class="settings-group">
+          <div class="group-label" data-i18n="groupBackground">Background</div>
+          <div class="group-card">
+            <button class="setting row-link focusable" id="galleryBtn">
+              <span class="setting-main"><span class="label" data-i18n="background">Background</span><span class="sub" data-i18n="backgroundSub">Pick one of 11 wallpapers.</span></span>
+              <span class="row-value"><span id="settingsBgName">Mountains</span><svg><use href="#i-chevron"/></svg></span>
+            </button>
+
+            <div class="setting">
+              <div class="setting-main"><div class="label" data-i18n="showBackground">Show background</div><div class="sub" data-i18n="showBackgroundSub">If off, only the dark gradient stays.</div></div>
+              <button class="switch focusable" id="showBgSwitch" aria-pressed="true"><i></i></button>
+            </div>
+
+            <div class="setting">
+              <div class="setting-main"><div class="label" data-i18n="motion">Background motion</div><div class="sub" data-i18n="motionSub">Slow, subtle zoom.</div></div>
+              <button class="switch focusable" id="motionSwitch" aria-pressed="true"><i></i></button>
+            </div>
+
+            <div class="setting">
+              <div class="setting-main"><div class="label" data-i18n="blur">Background blur</div><div class="sub" data-i18n="blurSub">Soft is much lighter than the previous version.</div></div>
+              <div class="seg" id="blurSeg">
+                <button class="focusable" data-blur="off" data-i18n="off">Off</button>
+                <button class="focusable" data-blur="soft" data-i18n="soft">Soft</button>
+                <button class="focusable" data-blur="strong" data-i18n="strong">Strong</button>
+              </div>
+            </div>
+
+            <div class="setting">
+              <div class="setting-main"><div class="label" data-i18n="dimming">Dimming</div><div class="sub" data-i18n="dimmingSub">Keeps text readable over any wallpaper.</div></div>
+              <div class="seg" id="dimSeg">
+                <button class="focusable" data-dim="soft" data-i18n="dimSoft">Soft</button>
+                <button class="focusable" data-dim="mid" data-i18n="dimMid">Medium</button>
+                <button class="focusable" data-dim="deep" data-i18n="dimDeep">Deep</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <div class="group-label" data-i18n="groupHome">Home screen</div>
+          <div class="group-card">
+            <button class="setting row-link focusable" id="tilesBtn">
+              <span class="setting-main"><span class="label" data-i18n="homeTiles">Home tiles</span><span class="sub" data-i18n="homeTilesSub">Choose an app for each of the five positions.</span></span>
+              <span class="row-value"><svg><use href="#i-chevron"/></svg></span>
+            </button>
+
+            <div class="setting">
+              <div class="setting-main"><div class="label" data-i18n="tileSize">Tile size</div><div class="sub" data-i18n="tileSizeSub">Larger for the sofa, smaller for more labels.</div></div>
+              <div class="seg" id="sizeSeg">
+                <button class="focusable" data-size="s">S</button>
+                <button class="focusable" data-size="m">M</button>
+                <button class="focusable" data-size="l">L</button>
+              </div>
+            </div>
+
+            <div class="setting">
+              <div class="setting-main"><div class="label" data-i18n="clock">Clock</div><div class="sub" data-i18n="clockSub">Large time and date in the top-left corner.</div></div>
+              <button class="switch focusable" id="clockSwitch" aria-pressed="true"><i></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <div class="group-label" data-i18n="groupAppearance">Appearance</div>
+          <div class="group-card">
+            <div class="setting">
+              <div class="setting-main"><div class="label" data-i18n="theme">Theme</div><div class="sub" data-i18n="themeSub">Graphite for a dark room, light for daytime.</div></div>
+              <div class="seg" id="themeSeg">
+                <button class="focusable" data-theme="dark" data-i18n="graphite">Graphite</button>
+                <button class="focusable" data-theme="light" data-i18n="light">Light</button>
+              </div>
+            </div>
+
+            <div class="setting">
+              <div class="setting-main"><div class="label" data-i18n="fontSize">Font size</div><div class="sub" data-i18n="fontSizeSub">Adjust the interface text.</div></div>
+              <div class="seg" id="fontSeg">
+                <button class="focusable" data-font="normal" data-i18n="fontNormal">Normal</button>
+                <button class="focusable" data-font="large" data-i18n="fontLarge">Large</button>
+                <button class="focusable" data-font="xlarge" data-i18n="fontXLarge">Very large</button>
+              </div>
+            </div>
+
+            <div class="setting">
+              <div class="setting-main"><div class="label" data-i18n="language">Language</div><div class="sub" data-i18n="languageSub">First launch is English. You can switch anytime.</div></div>
+              <div class="seg" id="langSeg">
+                <button class="focusable" data-lang="en">English</button>
+                <button class="focusable" data-lang="ru">Русский</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <div class="group-label" data-i18n="groupWeather">Weather</div>
+          <div class="group-card">
+            <button class="setting row-link focusable" id="cityBtn">
+              <span class="setting-main"><span class="label" data-i18n="weatherCity">Weather city</span><span class="sub" data-i18n="weatherCitySub">Type the city you want to track next to the clock.</span></span>
+              <span class="row-value"><span id="settingsCityName">Moscow</span><svg><use href="#i-chevron"/></svg></span>
+            </button>
+          </div>
+        </div>
+
+        <button class="primary-wide focusable" id="defaultBtn" data-i18n="makeDefault">Make default</button>
+        <div class="sheet-note" data-i18n="prototype">TinyWall · interactive prototype</div>
+      </div>
+      <div class="sheet-footer"><span>TinyWall+ 0.10</span><span data-i18n="prototypeShort">Prototype · 1920×1080</span></div>
+    </div>
+  </div>
+
+  <!-- background gallery -->
+  <div class="overlay" id="galleryOverlay">
+    <div class="center-wrap">
+      <div class="center-panel gallery-panel">
+        <div class="panel-head">
+          <div><h2 data-i18n="chooseBackground">Background</h2><p data-i18n="chooseBackgroundSub">Pick one of 11 wallpapers or your own photo.</p></div>
+          <button class="btn focusable" data-close><span data-i18n="back">Back</span></button>
+        </div>
+        <div class="panel-scroll"><div class="gallery-grid" id="galleryGrid"></div></div>
+        <div class="panel-foot"><span data-i18n="wallpaperCount">11 wallpapers</span><button class="btn primary focusable" data-close><span data-i18n="done">Done</span></button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- home tile positions -->
+  <div class="overlay" id="tilesOverlay">
+    <div class="center-wrap">
+      <div class="center-panel" style="width:1200px">
+        <div class="panel-head">
+          <div><h2 data-i18n="homeTiles">Home tiles</h2><p data-i18n="homeTilesSub">Choose an app for each of the five positions.</p></div>
+          <button class="btn focusable" data-close><span data-i18n="back">Back</span></button>
+        </div>
+        <div class="panel-scroll"><div class="position-grid" id="positionGrid"></div></div>
+        <div class="panel-foot"><span data-i18n="homeTilesFoot">Five positions, left to right.</span><button class="btn primary focusable" data-close><span data-i18n="done">Done</span></button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- choose app for a position -->
+  <div class="overlay" id="appsOverlay">
+    <div class="center-wrap">
+      <div class="center-panel apps-panel">
+        <div class="panel-head">
+          <div>
+            <div class="apps-headline"><h2 data-i18n="chooseApp">Choose app</h2><span class="badge" id="slotBadge">POSITION 01</span></div>
+            <p id="chooseAppSub">Assign an app to position 01.</p>
+          </div>
+          <button class="btn focusable" data-close><span data-i18n="back">Back</span></button>
+        </div>
+        <div class="panel-scroll"><div class="apps-grid" id="appsGrid"></div></div>
+        <div class="panel-foot">
+          <button class="btn ghost focusable clear-link" id="clearPosition"><span data-i18n="clearPosition">Clear position</span></button>
+          <span id="appsFootNote"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- all apps -->
+  <div class="overlay" id="allOverlay">
+    <div class="center-wrap">
+      <div class="center-panel apps-panel">
+        <div class="panel-head">
+          <div><h2 data-i18n="allApps">All apps</h2><p data-i18n="allAppsSub">All installed apps.</p></div>
+          <button class="btn focusable" data-close><span data-i18n="back">Back</span></button>
+        </div>
+        <div class="panel-scroll"><div class="apps-grid" id="allGrid"></div></div>
+        <div class="panel-foot"><span data-i18n="allAppsFoot">Launch demo · the real app opens installed applications.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- weather city: free text search, no preset city list -->
+  <div class="overlay" id="cityOverlay">
+    <div class="center-wrap">
+      <div class="center-panel city-panel">
+        <div class="panel-head">
+          <div><h2 data-i18n="chooseCity">Weather city</h2><p data-i18n="chooseCitySub">Type a city name. Results come from geocoding.</p></div>
+          <button class="btn focusable" data-close><span data-i18n="back">Back</span></button>
+        </div>
+        <div class="city-search">
+          <svg><use href="#i-search"/></svg>
+          <input id="cityInput" type="text" autocomplete="off" spellcheck="false" placeholder="Start typing a city…" aria-label="City name">
+          <button class="city-clear focusable" id="cityClear" aria-label="Clear"><svg><use href="#i-close"/></svg></button>
+        </div>
+        <div class="city-current"><span data-i18n="currentCity">Current:</span> <b id="cityCurrent">Moscow</b></div>
+        <div class="panel-scroll">
+          <div id="cityResults"></div>
+          <div class="city-note" data-i18n="citySearchNote">Start typing a city name. In the app, results are geocoded with Open-Meteo and you pick the right one.</div>
+        </div>
+        <div class="panel-foot"><span data-i18n="weatherNote">Prototype weather data.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const stage = $('#stage');
+
+/* ------------------------------------------------------------------ data */
+const WALLPAPERS = [
+  {id:'mountains', en:'Mountains', ru:'Горы',    full:'assets/tinywall/full/mountains.jpg', thumb:'assets/tinywall/thumbs/mountains.jpg'},
+  {id:'fjord',     en:'Fjord',     ru:'Фьорд',    full:'assets/tinywall/full/fjord.jpg',     thumb:'assets/tinywall/thumbs/fjord.jpg'},
+  {id:'city',      en:'Night City',ru:'Ночной город', full:'assets/tinywall/full/city.jpg',  thumb:'assets/tinywall/thumbs/city.jpg'},
+  {id:'plants',    en:'Plants',    ru:'Растения', full:'assets/tinywall/full/plants.jpg',    thumb:'assets/tinywall/thumbs/plants.jpg'},
+  {id:'christ',    en:'Christmas', ru:'Рождество',full:'assets/tinywall/full/christ.jpg',    thumb:'assets/tinywall/thumbs/christ.jpg'},
+  {id:'newyear',   en:'New Year',  ru:'Новый год',full:'assets/tinywall/full/newyear.jpg',   thumb:'assets/tinywall/thumbs/newyear.jpg'},
+  {id:'pinq',      en:'Penguins',  ru:'Пингвины', full:'assets/tinywall/full/pinq.jpg',      thumb:'assets/tinywall/thumbs/pinq.jpg'},
+  {id:'bears',     en:'Bears',     ru:'Медведи',  full:'assets/tinywall/full/bears.jpg',     thumb:'assets/tinywall/thumbs/bears.jpg'},
+  {id:'toon',      en:'Toon',      ru:'Мультфильм',full:'assets/tinywall/full/toon.jpg',     thumb:'assets/tinywall/thumbs/toon.jpg'},
+  {id:'games',     en:'Games',     ru:'Игры',     full:'assets/tinywall/full/games.jpg',     thumb:'assets/tinywall/thumbs/games.jpg'},
+  {id:'shooter',   en:'Battle',    ru:'Битва',    full:'assets/tinywall/full/shooter.jpg',   thumb:'assets/tinywall/thumbs/shooter.jpg'}
+];
+
+const APPS = [
+  {id:'kinopoisk', en:'Kinopoisk', ru:'Кинопоиск', color:'#ff9f43', glyph:'K'},
+  {id:'vk',        en:'VK Video',  ru:'VK Видео',  color:'#4f8dff', glyph:'VK'},
+  {id:'movielab',  en:'MovieLab',  ru:'MovieLab',  color:'#ff4d6d', glyph:'ML'},
+  {id:'media',     en:'MediaStation', ru:'MediaStation', color:'#3ddc97', glyph:'MS'},
+  {id:'vlc',       en:'VLC',       ru:'VLC',       color:'#ffb020', glyph:'VLC'},
+  {id:'rustore',   en:'RuStore',   ru:'RuStore',   color:'#4f9cff', glyph:'RS'},
+  {id:'youtube',   en:'YouTube',   ru:'YouTube',   color:'#ff4444', glyph:'YT'},
+  {id:'browser',   en:'Browser',   ru:'Браузер',   color:'#8b95a8', glyph:'B'},
+  {id:'files',     en:'Files',     ru:'Файлы',     color:'#8b95a8', glyph:'F'},
+  {id:'settingsapp', en:'Settings',ru:'Настройки', color:'#8b95a8', glyph:'S'},
+  {id:'gallery',   en:'Gallery',   ru:'Галерея',   color:'#8b95a8', glyph:'G'},
+  {id:'music',     en:'Music',     ru:'Музыка',    color:'#8b95a8', glyph:'M'}
+];
+
+const CITIES = {
+  yekaterinburg:{en:'Yekaterinburg', ru:'Екатеринбург', regionEn:'Sverdlovsk Oblast, Russia', regionRu:'Свердловская область, Россия', temp:-3, icon:'snow',  condEn:'Light snow',  condRu:'Небольшой снег'},
+  moscow:       {en:'Moscow',       ru:'Москва',       regionEn:'Russia', regionRu:'Россия', temp:1,  icon:'cloud', condEn:'Cloudy',      condRu:'Облачно'},
+  spb:          {en:'Saint Petersburg', ru:'Санкт-Петербург', regionEn:'Russia', regionRu:'Россия', temp:4, icon:'rain', condEn:'Rain', condRu:'Дождь'},
+  novosibirsk:  {en:'Novosibirsk',  ru:'Новосибирск',  regionEn:'Novosibirsk Oblast, Russia', regionRu:'Новосибирская область, Россия', temp:-8, icon:'sun',   condEn:'Clear',       condRu:'Ясно'},
+  kazan:        {en:'Kazan',        ru:'Казань',       regionEn:'Tatarstan, Russia', regionRu:'Татарстан, Россия', temp:0,  icon:'cloud', condEn:'Cloudy',      condRu:'Облачно'},
+  sochi:        {en:'Sochi',        ru:'Сочи',         regionEn:'Krasnodar Krai, Russia', regionRu:'Краснодарский край, Россия', temp:14, icon:'sun',   condEn:'Sunny',       condRu:'Солнечно'},
+  vladivostok:  {en:'Vladivostok',  ru:'Владивосток',  regionEn:'Primorsky Krai, Russia', regionRu:'Приморский край, Россия', temp:5,  icon:'wind',  condEn:'Windy',       condRu:'Ветрено'},
+  kaliningrad:  {en:'Kaliningrad',  ru:'Калининград',  regionEn:'Russia', regionRu:'Россия', temp:7,  icon:'rain',  condEn:'Rain',        condRu:'Дождь'},
+  murmansk:     {en:'Murmansk',     ru:'Мурманск',     regionEn:'Murmansk Oblast, Russia', regionRu:'Мурманская область, Россия', temp:-5, icon:'snow',  condEn:'Snow',        condRu:'Снег'},
+  vladikavkaz:  {en:'Vladikavkaz',  ru:'Владикавказ',  regionEn:'North Ossetia, Russia', regionRu:'Северная Осетия, Россия', temp:6,  icon:'sun',   condEn:'Clear',       condRu:'Ясно'}
+};
+
+const T = {
+  en: {
+    settings:'Settings', close:'Close', back:'Back', done:'Done',
+    groupBackground:'Background', groupHome:'Home screen', groupAppearance:'Appearance', groupWeather:'Weather',
+    background:'Background', backgroundSub:'Pick one of 11 wallpapers.',
+    showBackground:'Show background', showBackgroundSub:'If off, only the dark gradient stays.',
+    motion:'Background motion', motionSub:'Slow, subtle zoom.',
+    blur:'Background blur', blurSub:'Soft is much lighter than the previous version.',
+    off:'Off', soft:'Soft', strong:'Strong',
+    dimming:'Dimming', dimmingSub:'Keeps text readable over any wallpaper.',
+    dimSoft:'Soft', dimMid:'Medium', dimDeep:'Deep',
+    theme:'Theme', themeSub:'Graphite for a dark room, light for daytime.',
+    graphite:'Graphite', light:'Light',
+    language:'Language', languageSub:'First launch is English. You can switch anytime.',
+    fontSize:'Font size', fontSizeSub:'Adjust the interface text.', fontNormal:'Normal', fontLarge:'Large', fontXLarge:'Very large',
+    weatherCity:'Weather city', weatherCitySub:'Type the city you want to track next to the clock.',
+    clock:'Clock', clockSub:'Large time and date in the top-left corner.',
+    tileSize:'Tile size', tileSizeSub:'Larger for the sofa, smaller for more labels.',
+    homeTiles:'Home tiles', homeTilesSub:'Choose an app for each of the five positions.',
+    homeTilesFoot:'Five positions, left to right.',
+    makeDefault:'Make default',
+    prototype:'TinyWall+ 0.10 · interactive prototype', prototypeShort:'Prototype · 1920×1080',
+    allApps:'All apps', tiles:'Tiles',
+    addApp:'Add app', empty:'Empty', choose:'Choose', change:'Change',
+    chooseApp:'Choose app', chooseAppSub:'Assign an app to position {n}.',
+    position:'Position', clearPosition:'Clear position',
+    chooseBackground:'Background', chooseBackgroundSub:'Pick one of 11 wallpapers or your own photo.',
+    wallpaperCount:'11 wallpapers',
+    customPhoto:'Custom photo', customPhotoDemo:'In the app this opens the Android file picker. In the prototype it is only a demo.', chooseCity:'Weather city', chooseCitySub:'Type a city name. Results come from geocoding.',
+    weatherNote:'Prototype weather data.', currentCity:'Current:', cityStart:'Start typing a city name.', cityPlaceholder:'Start typing a city…', citySearchNote:'Start typing a city name. In the app, results are geocoded with Open-Meteo and you pick the right one.', demoResult:'Use “{city}”', demoRegion:'Demo geocoding', noData:'No data', allAppsSub:'All installed apps.',
+    allAppsFoot:'Launch demo · the real app opens installed applications.',
+    demoLaunch:'“{app}” — demo launch. The real app will open here.',
+    defaultToast:'Android will ask which launcher to use — demo.',
+    positionCard:'Position {n}', assign:'Assign an app to this position.',
+    appNote:'The home screen shows names only. App icons stay in this picker.'
+  },
+  ru: {
+    settings:'Настройки', close:'Закрыть', back:'Назад', done:'Готово',
+    groupBackground:'Фон', groupHome:'Главный экран', groupAppearance:'Оформление', groupWeather:'Погода',
+    background:'Фон', backgroundSub:'11 обоев. Выберите сцену для главного экрана.',
+    showBackground:'Показывать фон', showBackgroundSub:'Если выключить — останется тёмный градиент.',
+    motion:'Движение фона', motionSub:'Медленное, едва заметное приближение.',
+    blur:'Размытие фона', blurSub:'«Лёгкое» заметно мягче, чем в прошлой версии.',
+    off:'Выкл.', soft:'Лёгкое', strong:'Сильное',
+    dimming:'Затемнение', dimmingSub:'Чтобы текст читался на любых обоях.',
+    dimSoft:'Мягкое', dimMid:'Среднее', dimDeep:'Глубокое',
+    theme:'Тема', themeSub:'Графит для тёмной комнаты, светлая — для дневного света.',
+    graphite:'Графит', light:'Светлая',
+    language:'Язык', languageSub:'При первом запуске — английский. Можно переключить в любой момент.',
+    fontSize:'Размер шрифта', fontSizeSub:'Размер текста интерфейса.', fontNormal:'Обычный', fontLarge:'Крупный', fontXLarge:'Очень крупный',
+    weatherCity:'Город погоды', weatherCitySub:'Введите город, погоду которого показывать рядом с часами.',
+    clock:'Часы', clockSub:'Крупное время и дата в левом верхнем углу.',
+    tileSize:'Размер плиток', tileSizeSub:'Крупнее — для дивана, мельче — если нужно больше подписей.',
+    homeTiles:'Плитки на главном', homeTilesSub:'Выберите приложение для каждой из пяти позиций.',
+    homeTilesFoot:'Пять позиций, слева направо.',
+    makeDefault:'Сделать домашним',
+    prototype:'TinyWall+ 0.10 · интерактивный прототип', prototypeShort:'Прототип · 1920×1080',
+    allApps:'Все приложения', tiles:'Плитки',
+    addApp:'Добавить', empty:'Пусто', choose:'Выбрать', change:'Заменить',
+    chooseApp:'Выбрать приложение', chooseAppSub:'Назначьте приложение на позицию {n}.',
+    position:'Позиция', clearPosition:'Очистить позицию',
+    chooseBackground:'Фон', chooseBackgroundSub:'Выберите один из 11 фонов или своё фото.',
+    wallpaperCount:'11 фонов',
+    customPhoto:'Своё фото', customPhotoDemo:'В приложении здесь откроется выбор файла Android. В прототипе — только демонстрация.', chooseCity:'Город погоды', chooseCitySub:'Введите название города. Результаты приходят из геокодинга.',
+    weatherNote:'Демонстрационные данные погоды.', currentCity:'Сейчас:', cityStart:'Начните вводить название города.', cityPlaceholder:'Начните вводить город…', citySearchNote:'Начните вводить название города. В приложении результаты приходят из геокодинга Open-Meteo, вы выбираете нужный.', demoResult:'Использовать «{city}»', demoRegion:'Демо-геокодинг', noData:'Нет данных', allAppsSub:'Все установленные приложения.',
+    allAppsFoot:'Демо запуска · в приложении откроются реальные приложения.',
+    demoLaunch:'«{app}» — демо-запуск. В приложении здесь откроется реальное приложение.',
+    defaultToast:'Android спросит, какой лаунчер использовать — демо.',
+    positionCard:'Позиция {n}', assign:'Назначьте приложение на эту позицию.',
+    appNote:'На главном экране только названия. Иконки приложений остаются в этом выборе.'
+  }
+};
+
+function t(key, vars={}){
+  let value = (T[state.lang] && T[state.lang][key]) || T.en[key] || key;
+  for(const [k,v] of Object.entries(vars)) value = value.replaceAll('{'+k+'}', v);
+  return value;
+}
+function appById(id){ return APPS.find(a=>a.id===id) || null; }
+function wpById(id){ return WALLPAPERS.find(w=>w.id===id) || WALLPAPERS[0]; }
+function appName(app){ return app ? (state.lang==='ru' ? app.ru : app.en) : ''; }
+function currentCity(){
+  if(state.city === 'custom' && state.customCity) return state.customCity;
+  return CITIES[state.city] || CITIES.yekaterinburg;
+}
+function cityName(c){ return state.lang==='ru' ? c.ru : c.en; }
+function cityCond(c){ return state.lang==='ru' ? c.condRu : c.condEn; }
+function wpName(w){ return state.lang==='ru' ? w.ru : w.en; }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function tempText(v){ if(v === null || v === undefined) return '—°'; return (v < 0 ? '−' : '') + Math.abs(v) + '°'; }
+
+const params = new URLSearchParams(location.search);
+const state = {
+  lang: params.get('lang') === 'ru' ? 'ru' : 'en',
+  slots: [null,null,null,null,null],
+  wallpaper: params.get('wallpaper') || 'mountains',
+  blur: params.get('blur') || 'soft',
+  dim: params.get('dim') || 'mid',
+  theme: params.get('theme') || 'dark',
+  clock: params.get('clock') !== 'off',
+  size: params.get('size') || 'm',
+  font: params.get('font') || 'large',
+  city: params.get('city') || 'moscow',
+  customCity: null,
+  appSlot: 0
+};
+if(params.get('filled') === '1') state.slots = ['kinopoisk','vk','movielab','media','vlc'];
+if(!CITIES[state.city]) state.city = 'yekaterinburg';
+if(!['off','soft','strong'].includes(state.blur)) state.blur = 'soft';
+if(!['soft','mid','deep'].includes(state.dim)) state.dim = 'mid';
+if(!['dark','light'].includes(state.theme)) state.theme = 'dark';
+if(!['s','m','l'].includes(state.size)) state.size = 'm';
+if(!['normal','large','xlarge'].includes(state.font)) state.font = 'large';
+if(!WALLPAPERS.some(w=>w.id===state.wallpaper)) state.wallpaper = 'mountains';
+
+/* ------------------------------------------------------------------ helpers */
+let toastTimer;
+function toast(text){
+  const el = $('#toast');
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2000);
+}
+function weatherIcon(name){
+  const id = name==='sun' ? 'i-sun' : name==='snow' ? 'i-snow' : name==='rain' ? 'i-rain' : name==='wind' ? 'i-wind' : 'i-cloud';
+  return '<svg><use href="#'+id+'"/></svg>';
+}
+function fitStage(){
+  const s = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+  stage.style.transform = 'scale(' + s + ')';
+  stage.style.left = ((window.innerWidth - 1920*s)/2) + 'px';
+  stage.style.top = ((window.innerHeight - 1080*s)/2) + 'px';
+}
+window.addEventListener('resize', fitStage);
+fitStage();
+
+/* ------------------------------------------------------------------ render home */
+function renderHome(){
+  const slots = $('#slots');
+  slots.innerHTML = '';
+  state.slots.forEach((id,index)=>{
+    const app = appById(id);
+    const b = document.createElement('button');
+    b.className = 'slot focusable ' + (app ? 'filled' : 'empty');
+    b.dataset.slot = String(index);
+    if(app){
+      b.style.setProperty('--accent', app.color);
+      b.innerHTML = '<span class="slot-accent"></span>'+
+        '<span class="slot-no">'+pad2(index+1)+'</span>'+
+        '<span class="slot-name">'+escapeHtml(appName(app))+'</span>'+
+        '<svg class="slot-arrow"><use href="#i-arrow"/></svg>';
+      b.addEventListener('click', ()=>toast(t('demoLaunch',{app:appName(app)})));
+    } else {
+      b.innerHTML = '<span class="slot-no">'+pad2(index+1)+'</span>'+
+        '<span class="slot-plus">+</span>'+
+        '<span class="slot-add">'+t('addApp')+'</span>';
+      b.addEventListener('click', ()=>openAppPicker(index));
+    }
+    slots.appendChild(b);
+  });
+}
+function escapeHtml(value){
+  return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ------------------------------------------------------------------ weather + clock */
+function renderClock(){
+  const locale = state.lang === 'ru' ? 'ru-RU' : 'en-GB';
+  const now = new Date();
+  $('#time').textContent = now.toLocaleTimeString(locale, {hour:'2-digit',minute:'2-digit',hour12:false});
+  let date = now.toLocaleDateString(locale, {weekday:'long',day:'numeric',month:'long'});
+  date = date.charAt(0).toUpperCase() + date.slice(1);
+  $('#date').textContent = date;
+}
+function renderWeather(){
+  const c = currentCity();
+  $('#weatherIcon').innerHTML = weatherIcon(c.icon);
+  $('#weatherTemp').textContent = tempText(c.temp);
+  $('#weatherCity').textContent = cityName(c);
+  $('#weatherCond').textContent = cityCond(c);
+}
+setInterval(renderClock, 20000);
+
+/* ------------------------------------------------------------------ wallpaper / states */
+function applyWallpaper(id){
+  const w = wpById(id);
+  state.wallpaper = w.id;
+  $('#bgImage').src = w.full;
+  $('#settingsBgName').textContent = wpName(w);
+  document.querySelectorAll('.wall').forEach(el=>el.classList.toggle('on', el.dataset.wall === w.id));
+}
+function setBlur(value){
+  state.blur = value;
+  document.body.dataset.blur = value;
+  document.querySelectorAll('#blurSeg button').forEach(b=>b.classList.toggle('on', b.dataset.blur === value));
+}
+function setDim(value){
+  state.dim = value;
+  document.body.classList.remove('dim-soft','dim-mid','dim-deep');
+  document.body.classList.add('dim-' + value);
+  document.querySelectorAll('#dimSeg button').forEach(b=>b.classList.toggle('on', b.dataset.dim === value));
+}
+function setTheme(value){
+  state.theme = value;
+  document.body.dataset.theme = value;
+  document.querySelectorAll('#themeSeg button').forEach(b=>b.classList.toggle('on', b.dataset.theme === value));
+}
+function setSize(value){
+  state.size = value;
+  document.body.classList.remove('size-s','size-m','size-l');
+  document.body.classList.add('size-' + value);
+  document.querySelectorAll('#sizeSeg button').forEach(b=>b.classList.toggle('on', b.dataset.size === value));
+}
+function setFont(value){
+  state.font = value;
+  document.body.classList.remove('font-normal','font-large','font-xlarge');
+  document.body.classList.add('font-' + value);
+  document.querySelectorAll('#fontSeg button').forEach(b=>b.classList.toggle('on', b.dataset.font === value));
+}
+function setLanguage(value){
+  state.lang = value;
+  document.documentElement.lang = value;
+  applyLanguage();
+  renderHome();
+  renderTiles();
+  renderApps();
+  renderGallery();
+  if($('#cityInput')) renderCityResults($('#cityInput').value);
+  renderAllApps();
+  syncSettings();
+}
+function syncSwitch(el, on){
+  el.classList.toggle('off', !on);
+  el.classList.toggle('on', on);
+  el.setAttribute('aria-pressed', String(on));
+}
+function syncSettings(){
+  const w = wpById(state.wallpaper);
+  $('#settingsBgName').textContent = wpName(w);
+  $('#settingsCityName').textContent = cityName(currentCity());
+  syncSwitch($('#showBgSwitch'), !document.body.classList.contains('no-bg'));
+  syncSwitch($('#motionSwitch'), !document.body.classList.contains('no-motion'));
+  syncSwitch($('#clockSwitch'), state.clock);
+  document.querySelectorAll('#blurSeg button').forEach(b=>b.classList.toggle('on', b.dataset.blur === state.blur));
+  document.querySelectorAll('#dimSeg button').forEach(b=>b.classList.toggle('on', b.dataset.dim === state.dim));
+  document.querySelectorAll('#themeSeg button').forEach(b=>b.classList.toggle('on', b.dataset.theme === state.theme));
+  document.querySelectorAll('#sizeSeg button').forEach(b=>b.classList.toggle('on', b.dataset.size === state.size));
+  document.querySelectorAll('#fontSeg button').forEach(b=>b.classList.toggle('on', b.dataset.font === state.font));
+  document.querySelectorAll('#langSeg button').forEach(b=>b.classList.toggle('on', b.dataset.lang === state.lang));
+}
+function applyLanguage(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.dataset.i18n;
+    if(T[state.lang][key]) el.textContent = T[state.lang][key];
+  });
+  document.title = 'TinyWall+ — ' + (state.lang === 'ru' ? 'прототип' : 'interactive prototype');
+  renderClock();
+  renderWeather();
+  if($('#cityInput')){
+    $('#cityInput').placeholder = t('cityPlaceholder');
+    $('#cityInput').setAttribute('aria-label', t('chooseCity'));
+    $('#cityClear').setAttribute('aria-label', t('close'));
+  }
+  syncSettings();
+}
+
+/* ------------------------------------------------------------------ overlay stack */
+const overlayStack = [];
+const overlayIds = {
+  settingsOverlay:'settings', galleryOverlay:'gallery', tilesOverlay:'tiles',
+  appsOverlay:'apps', allOverlay:'all', cityOverlay:'city'
+};
+function openOverlay(id, preferred){
+  const ov = document.getElementById(id);
+  if(!ov) return;
+  ov.style.zIndex = String(30 + overlayStack.length);
+  ov.classList.add('open');
+  overlayStack.push(id);
+  document.body.classList.add('overlay-open');
+  const target = preferred ? ov.querySelector(preferred) : ov.querySelector('.focusable');
+  if(target) focusEl(target);
+}
+function closeTop(){
+  const id = overlayStack.pop();
+  if(!id) return false;
+  const ov = document.getElementById(id);
+  if(ov) ov.classList.remove('open');
+  if(!overlayStack.length) document.body.classList.remove('overlay-open');
+  const top = overlayStack.length ? document.getElementById(overlayStack[overlayStack.length-1]) : null;
+  const target = top ? top.querySelector('.focusable') : document.querySelector('.slot');
+  if(target) focusEl(target);
+  return true;
+}
+function closeAll(){
+  while(overlayStack.length) closeTop();
+}
+
+/* ------------------------------------------------------------------ focus */
+let current = null;
+function activeScope(){
+  if(overlayStack.length) return document.getElementById(overlayStack[overlayStack.length-1]);
+  return stage;
+}
+function focusables(){
+  return [...activeScope().querySelectorAll('.focusable')].filter(el=>el.offsetParent !== null);
+}
+function focusEl(el){
+  if(!el) return;
+  if(current && current.classList) current.classList.remove('focused');
+  current = el;
+  el.classList.add('focused');
+  el.focus({preventScroll:true});
+  el.scrollIntoView({block:'nearest', inline:'nearest'});
+}
+function navigate(dir){
+  const items = focusables().filter(el=>el!==current);
+  if(!items.length) return;
+  const c = current.getBoundingClientRect();
+  const cx = c.left + c.width/2, cy = c.top + c.height/2;
+  let best = null, bestScore = Infinity;
+  for(const el of items){
+    const r = el.getBoundingClientRect();
+    const x = r.left + r.width/2, y = r.top + r.height/2;
+    const dx = x - cx, dy = y - cy;
+    let primary, secondary;
+    if(dir==='right'){ if(dx <= 24 || dx < Math.abs(dy) * 0.25) continue; primary = dx; secondary = Math.abs(dy); }
+    else if(dir==='left'){ if(dx >= -24 || -dx < Math.abs(dy) * 0.25) continue; primary = -dx; secondary = Math.abs(dy); }
+    else if(dir==='down'){ if(dy <= 24 || dy < Math.abs(dx) * 0.25) continue; primary = dy; secondary = Math.abs(dx); }
+    else { if(dy >= -24 || -dy < Math.abs(dx) * 0.25) continue; primary = -dy; secondary = Math.abs(dx); }
+    const score = primary + secondary * 2.1;
+    if(score < bestScore){ bestScore = score; best = el; }
+  }
+  if(best) focusEl(best);
+}
+
+/* ------------------------------------------------------------------ tiles editor */
+function renderTiles(){
+  const grid = $('#positionGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  state.slots.forEach((id,index)=>{
+    const app = appById(id);
+    const card = document.createElement('div');
+    card.className = 'position-card focusable ' + (app ? 'filled' : '');
+    card.tabIndex = 0;
+    card.dataset.slot = String(index);
+    if(app) card.style.setProperty('--accent', app.color);
+    const clear = app
+      ? '<button class="position-clear focusable" aria-label="'+t('clearPosition')+'" data-clear="'+index+'"><svg><use href="#i-close"/></svg></button>'
+      : '';
+    card.innerHTML = (app ? '<span class="position-accent"></span>' : '') +
+      '<div class="position-top"><span class="position-no">'+pad2(index+1)+'</span>'+clear+'</div>'+
+      '<div class="position-name">'+(app ? escapeHtml(appName(app)) : t('empty'))+'</div>'+
+      '<div class="position-hint">'+(app ? t('change') : t('choose'))+'</div>';
+    card.addEventListener('click', e=>{
+      if(e.target.closest('[data-clear]')) return;
+      openAppPicker(index);
+    });
+    const clearBtn = card.querySelector('[data-clear]');
+    if(clearBtn) clearBtn.addEventListener('click', e=>{
+      e.stopPropagation();
+      state.slots[index] = null;
+      renderTiles();
+      renderHome();
+      toast(t('empty'));
+    });
+    grid.appendChild(card);
+  });
+}
+function openTiles(){
+  renderTiles();
+  openOverlay('tilesOverlay', '.position-card');
+}
+
+/* ------------------------------------------------------------------ app picker */
+function renderApps(){
+  const grid = $('#appsGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  const currentId = state.slots[state.appSlot];
+  APPS.forEach(app=>{
+    const b = document.createElement('button');
+    b.className = 'app-tile focusable ' + (app.id === currentId ? 'current' : '');
+    b.style.setProperty('--glyph', app.color);
+    b.innerHTML = '<span class="app-check"><svg><use href="#i-check"/></svg></span>'+
+      '<span class="app-glyph">'+escapeHtml(app.glyph)+'</span>'+
+      '<span class="app-name">'+escapeHtml(appName(app))+'</span>';
+    b.addEventListener('click', ()=>{
+      state.slots[state.appSlot] = app.id;
+      renderHome();
+      renderTiles();
+      closeTop();
+      const topId = overlayStack.length ? overlayStack[overlayStack.length-1] : null;
+      const target = topId === 'tilesOverlay'
+        ? document.querySelector('.position-card[data-slot="'+state.appSlot+'"]')
+        : document.querySelector('.slot[data-slot="'+state.appSlot+'"]');
+      if(target) focusEl(target);
+      toast(t('demoLaunch',{app:appName(app)}));
+    });
+    grid.appendChild(b);
+  });
+  $('#slotBadge').textContent = t('position').toUpperCase() + ' ' + pad2(state.appSlot+1);
+  $('#chooseAppSub').textContent = t('chooseAppSub',{n:pad2(state.appSlot+1)});
+  $('#clearPosition').style.display = currentId ? 'inline-flex' : 'none';
+  $('#appsFootNote').textContent = t('appNote');
+}
+function openAppPicker(slot){
+  state.appSlot = slot;
+  renderApps();
+  openOverlay('appsOverlay', '.app-tile');
+}
+function clearPosition(){
+  state.slots[state.appSlot] = null;
+  renderHome();
+  renderTiles();
+  closeTop();
+  const topId = overlayStack.length ? overlayStack[overlayStack.length-1] : null;
+  const target = topId === 'tilesOverlay'
+    ? document.querySelector('.position-card[data-slot="'+state.appSlot+'"]')
+    : document.querySelector('.slot[data-slot="'+state.appSlot+'"]');
+  if(target) focusEl(target);
+}
+
+/* ------------------------------------------------------------------ gallery */
+function renderGallery(){
+  const grid = $('#galleryGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  WALLPAPERS.forEach(w=>{
+    const b = document.createElement('button');
+    b.className = 'wall focusable ' + (w.id === state.wallpaper ? 'on' : '');
+    b.dataset.wall = w.id;
+    b.innerHTML = '<span class="wall-thumb"><img src="'+w.thumb+'" alt=""><span class="wall-check"><svg><use href="#i-check"/></svg></span></span>'+
+      '<span class="wall-label">'+escapeHtml(wpName(w))+'</span>';
+    b.addEventListener('click', ()=>{
+      applyWallpaper(w.id);
+      renderGallery();
+      syncSettings();
+      const el = document.querySelector('.wall[data-wall="'+w.id+'"]');
+      if(el) focusEl(el);
+    });
+    grid.appendChild(b);
+  });
+  const custom = document.createElement('button');
+  custom.className = 'wall focusable';
+  custom.innerHTML = '<span class="wall-thumb custom-thumb"><span class="custom-plus">+</span></span>'+
+    '<span class="wall-label">'+escapeHtml(t('customPhoto'))+'</span>';
+  custom.addEventListener('click', ()=>toast(t('customPhotoDemo')));
+  grid.appendChild(custom);
+}
+
+/* ------------------------------------------------------------------ city search */
+function renderCityResults(query){
+  const box = $('#cityResults');
+  if(!box) return;
+  const q = (query || '').trim();
+  const current = currentCity();
+  const currentEl = $('#cityCurrent');
+  if(currentEl) currentEl.textContent = cityName(current);
+  box.innerHTML = '';
+  if(!q){
+    box.innerHTML = '<div class="city-empty">'+escapeHtml(t('cityStart'))+'</div>';
+    return;
+  }
+  const ql = q.toLowerCase();
+  const matches = Object.entries(CITIES).filter(([id,c])=>{
+    return (c.en+' '+c.ru+' '+c.regionEn+' '+c.regionRu).toLowerCase().includes(ql);
+  });
+  matches.forEach(([id,c])=>{ box.appendChild(cityResultRow(id, c, id === state.city)); });
+  if(!matches.length){
+    const custom = {en:q, ru:q, regionEn:t('demoRegion'), regionRu:t('demoRegion'), temp:null,
+      icon:'cloud', condEn:t('noData'), condRu:t('noData')};
+    box.appendChild(cityResultRow('custom', custom, state.city === 'custom', q));
+  }
+}
+function cityResultRow(id, city, selected, customName){
+  const b = document.createElement('button');
+  b.className = 'city-result focusable ' + (selected ? 'on ' : '') + (id === 'custom' ? 'demo' : '');
+  const region = state.lang === 'ru' ? city.regionRu : city.regionEn;
+  const shownName = customName ? t('demoResult',{city:customName}) : cityName(city);
+  b.innerHTML = '<span class="city-icon">'+weatherIcon(city.icon)+'</span>'+
+    '<span class="city-meta"><span class="city-name">'+escapeHtml(shownName)+'</span>'+
+    '<span class="city-region">'+escapeHtml(region || '')+'</span></span>'+
+    '<span class="city-temp">'+tempText(city.temp)+'</span>'+
+    '<svg class="city-check"><use href="#i-check"/></svg>';
+  b.addEventListener('click', ()=>{
+    if(id === 'custom'){
+      state.city = 'custom';
+      state.customCity = city;
+    } else {
+      state.city = id;
+      state.customCity = null;
+    }
+    renderWeather();
+    syncSettings();
+    closeTop();
+    const row = $('#cityBtn');
+    if(row) focusEl(row);
+  });
+  return b;
+}
+function openCitySearch(query){
+  const input = $('#cityInput');
+  input.value = query || '';
+  renderCityResults(input.value);
+  openOverlay('cityOverlay', '#cityInput');
+  setTimeout(()=>{ input.focus(); input.select(); }, 30);
+}
+
+/* ------------------------------------------------------------------ all apps */
+function renderAllApps(){
+  const grid = $('#allGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  APPS.forEach(app=>{
+    const b = document.createElement('button');
+    b.className = 'app-tile focusable';
+    b.style.setProperty('--glyph', app.color);
+    b.innerHTML = '<span class="app-glyph">'+escapeHtml(app.glyph)+'</span>'+
+      '<span class="app-name">'+escapeHtml(appName(app))+'</span>';
+    b.addEventListener('click', ()=>toast(t('demoLaunch',{app:appName(app)})));
+    grid.appendChild(b);
+  });
+}
+
+/* ------------------------------------------------------------------ controls */
+document.querySelectorAll('[data-close]').forEach(el=>el.addEventListener('click', closeTop));
+document.querySelectorAll('[data-action]').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    const action = el.dataset.action;
+    if(action === 'settings') openOverlay('settingsOverlay', '#galleryBtn');
+    else if(action === 'all'){ renderAllApps(); openOverlay('allOverlay', '.app-tile'); }
+    else if(action === 'tiles') openTiles();
+  });
+});
+
+$('#galleryBtn').addEventListener('click', ()=>{
+  renderGallery();
+  openOverlay('galleryOverlay', '.wall.on');
+});
+$('#cityBtn').addEventListener('click', ()=>openCitySearch(''));
+$('#tilesBtn').addEventListener('click', openTiles);
+$('#makeDefault').addEventListener('click', ()=>toast(t('defaultToast')));
+$('#defaultBtn').addEventListener('click', ()=>toast(t('defaultToast')));
+
+$('#showBgSwitch').addEventListener('click', ()=>{
+  const off = !document.body.classList.contains('no-bg');
+  document.body.classList.toggle('no-bg', off);
+  syncSettings();
+});
+$('#motionSwitch').addEventListener('click', ()=>{
+  const off = !document.body.classList.contains('no-motion');
+  document.body.classList.toggle('no-motion', off);
+  syncSettings();
+});
+$('#clockSwitch').addEventListener('click', ()=>{
+  state.clock = !state.clock;
+  document.body.classList.toggle('hide-clock', !state.clock);
+  syncSettings();
+});
+document.querySelectorAll('#blurSeg button').forEach(b=>b.addEventListener('click', ()=>setBlur(b.dataset.blur)));
+document.querySelectorAll('#dimSeg button').forEach(b=>b.addEventListener('click', ()=>setDim(b.dataset.dim)));
+document.querySelectorAll('#themeSeg button').forEach(b=>b.addEventListener('click', ()=>setTheme(b.dataset.theme)));
+document.querySelectorAll('#sizeSeg button').forEach(b=>b.addEventListener('click', ()=>setSize(b.dataset.size)));
+document.querySelectorAll('#fontSeg button').forEach(b=>b.addEventListener('click', ()=>setFont(b.dataset.font)));
+document.querySelectorAll('#langSeg button').forEach(b=>b.addEventListener('click', ()=>setLanguage(b.dataset.lang)));
+$('#clearPosition').addEventListener('click', clearPosition);
+$('#cityInput').addEventListener('input', ()=>renderCityResults($('#cityInput').value));
+$('#cityInput').addEventListener('keydown', e=>{
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    const first = document.querySelector('#cityResults .city-result');
+    if(first) first.click();
+  }
+});
+$('#cityClear').addEventListener('click', ()=>{
+  $('#cityInput').value = '';
+  renderCityResults('');
+  $('#cityInput').focus();
+});
+
+/* ------------------------------------------------------------------ keyboard */
+document.addEventListener('keydown', e=>{
+  if(e.target && e.target.tagName === 'INPUT' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ')) return;
+  if(e.key === 'ArrowRight'){ e.preventDefault(); navigate('right'); }
+  else if(e.key === 'ArrowLeft'){ e.preventDefault(); navigate('left'); }
+  else if(e.key === 'ArrowDown'){ e.preventDefault(); navigate('down'); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); navigate('up'); }
+  else if(e.key === 'Enter' || e.key === ' '){
+    if(current){ e.preventDefault(); current.click(); }
+  }
+  else if(e.key === 'Escape' || e.key === 'Backspace'){
+    if(closeTop()) e.preventDefault();
+  }
+  else if(e.key === 's' || e.key === 'S' || e.key === 'ы' || e.key === 'Ы'){
+    if(!overlayStack.length) openOverlay('settingsOverlay', '#galleryBtn');
+  }
+});
+
+/* ------------------------------------------------------------------ init */
+function init(){
+  applyWallpaper(state.wallpaper);
+  setBlur(state.blur);
+  setDim(state.dim);
+  setTheme(state.theme);
+  setSize(state.size);
+  setFont(state.font);
+  document.body.classList.toggle('hide-clock', !state.clock);
+  applyLanguage();
+  renderHome();
+  renderTiles();
+  renderApps();
+  renderGallery();
+  if($('#cityInput')) renderCityResults($('#cityInput').value);
+  renderAllApps();
+  syncSettings();
+
+  const view = params.get('view');
+  if(view === 'settings') openOverlay('settingsOverlay', '#galleryBtn');
+  else if(view === 'gallery'){ renderGallery(); openOverlay('galleryOverlay', '.wall.on'); }
+  else if(view === 'tiles') openTiles();
+  else if(view === 'apps'){ openAppPicker(Number(params.get('slot') || 0)); }
+  else if(view === 'city'){ openCitySearch(params.get('q') || ''); }
+  else if(view === 'all'){ renderAllApps(); openOverlay('allOverlay', '.app-tile'); }
+  else focusEl(document.querySelector('.slot'));
+}
+init();
+</script>
+</body>
+</html>
